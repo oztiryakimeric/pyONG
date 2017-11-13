@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room List</title>
+</head>
+<body>
+    {% for room in rooms %}
+  <p><a href="/room/{{room}}">{{ room }}</a></p>
+{% endfor %}
+</body>
+</html>
