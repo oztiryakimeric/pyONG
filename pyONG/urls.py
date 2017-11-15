@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from game.views import game_canvas, list_rooms
+from game.views import game_canvas, list_rooms, create_user
 
 urlpatterns = [
     url(r'^room/(?P<room_code>[a-zA-Z0-9_]+)', game_canvas),

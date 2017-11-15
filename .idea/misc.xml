@@ -30,9 +30,6 @@
     <ConfirmationsSetting value="0" id="Remove" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.6.1 virtualenv at ~/GoogleDrive/Personal/ee_proj/env" project-jdk-type="Python SDK" />
-  <component name="SvnConfiguration">
-    <configuration />
-  </component>
   <component name="masterDetails">
     <states>
       <state key="ScopeChooserConfigurable.UI">
