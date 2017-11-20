@@ -15,11 +15,14 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.auth.views import login, logout
 
-from game.views import game_canvas, list_rooms, create_user
+from game.views import game_canvas, list_rooms
 
 urlpatterns = [
     url(r'^room/(?P<room_code>[a-zA-Z0-9_]+)', game_canvas),
+    url(r'^accounts/login/$', login, name='login'),  # The base django login view
+    url(r'^accounts/logout/$', logout, name='logout'),  # The base django logout view
     url(r'^rooms', list_rooms),
     url(r'^admin/', admin.site.urls),
 ]

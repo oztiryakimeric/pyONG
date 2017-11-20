@@ -112,3 +112,10 @@ class Vector{
     return {x:floor(this.x / this.length * constraint), y:floor(this.y / this.length * constraint)}
   }
 }
+
+class Connection{
+  constructor(path){
+    this.path = path
+    this.socket = new ReconnectingWebSocket(path);
+  }
+}

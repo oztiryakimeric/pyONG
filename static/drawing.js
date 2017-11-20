@@ -7,16 +7,34 @@ let ball
 var velocity;
 
 function setup(){
-  createCanvas(SCREEN_WIDTH, SCREEN_HEIGHT)
-  background(120, 120, 120)
+  //ws://localhost:8000/room/ABC
+  socket = new ReconnectingWebSocket("ws://localhost:8000/room/ABC");
 
-  ball = new Ball(1, {x:250, y:250}, {width:10, height:10}, screen, "#FF0000")
-  velocity = new Vector(2, 1)
+  let width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+  let height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+
+  socket.onopen = function () {
+    console.log("Connected to chat socket");
+    socket.send(JSON.stringify({command:"join", width: width, height: height}));
+  };
+
+  socket.onclose = function () {
+    console.log("Disconnected from chat socket");
+  }
+
+  socket.onmessage = function (message) {
+    console.log("Got websocket message " + message.data);
+  }
+
+  createCanvas(100, 100);
+  background(200);
+
+  //noLoop()
 }
 
 function draw() {
-  background(120, 120, 120)
+  background(200);
 
-  ball.move(velocity)
-  ball.draw()
+
+
 }
