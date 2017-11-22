@@ -51,7 +51,7 @@ def join(message):
                                                     "ball_size": 15,
                                                     "paddle_height": 75,
                                                     "paddle_width": 15,
-                                                    "paddle_space": 10})})
+                                                    "paddle_space": 23})})
 
     game.send_all_clients({"action": "NEW_PLAYER",
                            "players": game.get_players()})
@@ -61,4 +61,17 @@ def join(message):
                                "players": game.users,
                                "screen_size": game.screen_size,
                                "ball_vector": {"x": 2, "y": 3}})
+
+
+@channel_session_user
+def paddle_update(message):
+    print("Client ({}) send paddle update".format(message.user))
+
+    game = Game.get_or_create(message["room_code"])
+    game.send_all_clients({"action": "PADDLE_UPDATE",
+                           "id": message["id"],
+                           "x": message["x"],
+                           "y": message["y"]})
+
+
 

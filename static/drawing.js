@@ -1,5 +1,6 @@
-let ball, socket, ball_size, paddle_height, paddle_width, paddle_space, velocity, id, screen
-let players = []
+let game = new Game();
+let keyboard = new Keyboard(game);
+let socket;
 
 function setup(){
   //ws://localhost:8000/room/ABC
@@ -9,11 +10,15 @@ function setup(){
   socket = new ReconnectingWebSocket(ws_path);
   socket.debug = true;
 
-  let width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
-  let height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
-
   socket.onopen = function () {
     console.log("Connected to chat socket");
+
+    let width = window.innerWidth
+                || document.documentElement.clientWidth
+                || document.body.clientWidth
+    let height = window.innerHeight
+                 || document.documentElement.clientHeight
+                 || document.body.clientHeight
     socket.send(JSON.stringify({command:"join", width: width, height: height}))
   };
 
@@ -27,49 +32,33 @@ function setup(){
     if(data.action == "CONSTANTS"){
       console.log("Action: CONSTANTS - " + message.data);
 
-      id = data.id
-      ball_size = data.ball_size
-      paddle_height = data.paddle_height
-      paddle_width = data.paddle_width
-      paddle_space = data.paddle_space
+      game.setConstants(data.id, data.ball_size, data.paddle_height,
+                        data.paddle_width, data.paddle_space);
     }
 
     else if(data.action == "NEW_PLAYER"){
       console.log("Action: NEW_PLAYER - " + message.data);
-      for(var i=0; i<data.players.length; i++){
-        if(!contains(data.players[i].id))
-          players.push({id: data.players[i].id, username: data.players[i].username, border:data.players[i].border, score: 0})
-      }
-      function contains(id){
-        for(var i=0; i<players.length; i++)
-          if(players[i].id == id)
-            return true;
-        return false;
-      }
+
+      game.updatePlayerList(data.players);
     }
 
     else if(data.action == "ALL_USERS_OK"){
       console.log("Action: ALL_USERS_OK - " + message.data);
 
       createCanvas(data.screen_size, data.screen_size)
-      screen = new Screen(paddle_space, data.screen_size - paddle_space, paddle_space, data.screen_size - paddle_space)
+      game.setScreen(data.screen_size)
+      game.setVelocity(data.ball_vector.x, data.ball_vector.y)
+      game.initializeDrawables()
 
-      velocity = new Vector(data.ball_vector.x, data.ball_vector.y)
-      ball = new Ball(1,
-                      {x:(data.screen_size - ball_size)/2, y:(data.screen_size - ball_size)/2},
-                      {height:ball_size, width:ball_size},
-                      screen,
-                      "#FFFFFF")
-
-
-      for(var i=0; i<players.length; i++){
-        players[i].paddle = new Paddle(players[i].id, paddlePositions[players[i].border], paddleSizes[players[i].border], screen, "#FFFFFF")
-        if(id == players[i].id){
-          players[i].paddle.color = "#FF0000"
-        }
-      }
-      console.log(players);
       loop()
+    }
+    else if(data.action == "PADDLE_UPDATE"){
+      console.log("Action: PADDLE_UPDATE - " + message.data);
+      if(data.id != game.id){
+        let paddle = game.getPlayer(data.id).paddle
+        paddle.position.x = data.x;
+        paddle.position.y = data.y;
+      }
     }
   }
 
@@ -80,25 +69,27 @@ function setup(){
 
 function draw() {
   background(200);
-  if(ball){
-    ball.move(velocity)
-    ball.draw()
-  }
-  for(var i=0; i<players.length; i++){
-    if(players[i].paddle){
-      players[i].paddle.draw()
+  if(game){
+    if(game.ball){
+      game.ball.move(game.velocity)
+      game.ball.draw()
+    }
+
+    for(var i=0; i<game.players.length; i++){
+      if(game.players[i].paddle)
+        game.players[i].paddle.draw()
+    }
+    if(keyboard.isPressed){
+      game.player.paddle.move(new Vector(0, keyboard.getDirection() * 6));
+      socket.send(JSON.stringify({command:"paddle_update", id:game.id, x:game.player.paddle.position.x, y:game.player.paddle.position.y}))
     }
   }
 }
 
 function keyPressed(){
-  if (keyCode === LEFT_ARROW) {
-   players[0].paddle.position.y -= 2
- } else if (keyCode === RIGHT_ARROW) {
-   value = 0;
- }
+  keyboard.keyPressed(keyCode);
 }
 
 function keyReleased(){
-
+  keyboard.keyReleased();
 }

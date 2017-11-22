@@ -6,7 +6,7 @@ class Screen{
     this.bottomLimit = bottomLimit
   }
 
-  position(border){
+  position(border) {
     let paddlePositions = {"LEFT":  {x: this.leftLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
                            "RIGHT":  {x: this.rightLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
                            "TOP":  {x:  (this.rightLimit - this.leftLimit)/2 + this.leftLimit, y:this.topLimit},
@@ -96,7 +96,7 @@ class Ball extends Rigid{
 }
 
 class Paddle extends Rigid{
-  constructor(id, position, size, screen, color){
+  constructor(id, position, size, screen, border, color){
     super(position, size, screen,)
     this.id = id
     this.color = color
@@ -104,11 +104,16 @@ class Paddle extends Rigid{
 
   static newInstance(id, position, size, screen, border, color){
     if(border == "LEFT" || border == "RIGHT"){
-      return new Paddle(id, position, size, screen, color);
+      return new Paddle(id, position, size, screen, border, color);
     }
     else if(border == "TOP" || border == "BOTTOM"){
-      return new Paddle(id, position, {height: size.width, width: size.height}, screen, color);
+      return new Paddle(id, position, {height: size.width, width: size.height}, screen, border, color);
     }
+  }
+
+  move(velocity){
+    this.position.x += velocity.x
+    this.position.y += velocity.y
   }
 
   draw(){
@@ -127,5 +132,50 @@ class Vector{
 
   transform(constraint) {
     return {x:floor(this.x / this.length * constraint), y:floor(this.y / this.length * constraint)}
+  }
+}
+
+class Player{
+  constructor(id, username, border){
+    this.id = id;
+    this.username = username;
+    this.border = border;
+    this.score = 0
+  }
+}
+
+class Keyboard{
+
+  constructor(game){
+    this.game = game;
+  }
+
+  keyPressed(keyCode){
+    this.isPressed = true;
+    this.keyCode = keyCode;
+  }
+
+  keyReleased(){
+    this.isPressed = false;
+    this.keyCode = null;
+  }
+
+  getDirection(){
+    let border = this.game.player.border;
+    if(border == "LEFT" || border == "RIGHT"){
+      if(this.keyCode == UP_ARROW)
+        return -1
+      if(this.keyCode == DOWN_ARROW)
+        return 1
+    }
+    else if(border =="TOP" || border == "BOTTOM"){
+      if(this.keyCode == LEFT_ARROW)
+        return -1
+      if(this.keyCode == RIGHT_ARROW)
+        return 1
+    }
+    else {
+      return 0
+    }
   }
 }
