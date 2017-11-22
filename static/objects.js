@@ -5,6 +5,15 @@ class Screen{
     this.topLimit = topLimit
     this.bottomLimit = bottomLimit
   }
+
+  position(border){
+    let paddlePositions = {"LEFT":  {x: this.leftLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
+                           "RIGHT":  {x: this.rightLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
+                           "TOP":  {x:  (this.rightLimit - this.leftLimit)/2 + this.leftLimit, y:this.topLimit},
+                           "BOTTOM":  {x:(this.rightLimit - this.leftLimit)/2 + this.leftLimit, y:this.bottomLimit},
+                           "CENTER": {x: (this.rightLimit - this.leftLimit)/2 + this.leftLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit}}
+    return paddlePositions[border]
+  }
 }
 
 class Rigid{
@@ -15,32 +24,32 @@ class Rigid{
   }
 
   isCollidesTop() {
-    if(this.position.y <= this.screen.topLimit){
-      this.position.y = this.screen.topLimit;
+    if(this.position.y - this.size.height/2 <= this.screen.topLimit){
+      this.position.y = this.screen.topLimit + this.size.height/2;
       return true
     }
     return false
   }
 
   isCollidesBottom() {
-    if(this.position.y + this.size.height >= this.screen.bottomLimit){
-      this.position.y = this.screen.bottomLimit - this.size.height
+    if(this.position.y + this.size.height/2 >= this.screen.bottomLimit){
+      this.position.y = this.screen.bottomLimit - this.size.height/2
       return true
     }
     return false
   }
 
   isCollidesLeft() {
-    if(this.position.x <= this.screen.leftLimit){
-      this.position.x = this.screen.leftLimit
+    if(this.position.x - this.size.width/2 <= this.screen.leftLimit){
+      this.position.x = this.screen.leftLimit + this.size.width/2
       return true
     }
     return false
   }
 
   isCollidesRight() {
-    if(this.position.x + this.size.width  >= this.screen.rightLimit){
-      this.position.x = this.screen.rightLimit - this.size.width
+    if(this.position.x + this.size.width/2  >= this.screen.rightLimit){
+      this.position.x = this.screen.rightLimit - this.size.width/2
       return true
     }
     return false
@@ -51,7 +60,6 @@ class Rigid{
       this.changeVectorDirection("HORIZONTAL", velocity)
     }
     else if(this.isCollidesLeft() || this.isCollidesRight()){
-      console.log("Collide");
       this.changeVectorDirection("VERTICAL", velocity)
 
     }
@@ -68,8 +76,8 @@ class Rigid{
       vector.y = -vector.y
   }
 
-  getCenter() {
-    return {x:floor(this.position.x + this.size.width / 2), y:floor(this.position.y + this.size.height / 2)}
+  translatedPosition() {
+    return {x:floor(this.position.x - this.size.width / 2), y:floor(this.position.y - this.size.height / 2)}
   }
 }
 
@@ -83,7 +91,7 @@ class Ball extends Rigid{
   draw(){
     fill(this.color)
     noStroke()
-    ellipse(this.position.x, this.position.y, this.size.height)
+    ellipse(this.translatedPosition().x, this.translatedPosition().y, this.size.height)
   }
 }
 
@@ -94,10 +102,19 @@ class Paddle extends Rigid{
     this.color = color
   }
 
+  static newInstance(id, position, size, screen, border, color){
+    if(border == "LEFT" || border == "RIGHT"){
+      return new Paddle(id, position, size, screen, color);
+    }
+    else if(border == "TOP" || border == "BOTTOM"){
+      return new Paddle(id, position, {height: size.width, width: size.height}, screen, color);
+    }
+  }
+
   draw(){
     fill(this.color)
     noStroke()
-    ellipse(this.position.x, this.position.y, this.size)
+    rect(this.translatedPosition().x, this.translatedPosition().y, this.size.width, this.size.height)
   }
 }
 
@@ -110,12 +127,5 @@ class Vector{
 
   transform(constraint) {
     return {x:floor(this.x / this.length * constraint), y:floor(this.y / this.length * constraint)}
-  }
-}
-
-class Connection{
-  constructor(path){
-    this.path = path
-    this.socket = new ReconnectingWebSocket(path);
   }
 }

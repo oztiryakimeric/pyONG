@@ -8,17 +8,16 @@ from pyONG import singleton_redis
 
 class GameRoom(models.Model):
     code = models.CharField(max_length=10)
-
-    @property
-    def websocket_group(self):
-        """
-        Returns the Channels Group that sockets should subscribe to to get sent
-        messages as they are generated.
-        """
-        return Group("room-%s" % self.id)
+    # owner = models.CharField(max_length=100)
+    # timestamp = models.CharField(max_length=100)
+    # player_count = models.IntegerField()
+    # ball_size = models.IntegerField()
+    # paddle_size = models.IntegerField()
 
     def __str__(self):
         return self.code
+
+# Create a model for store game results.
 
 
 class BaseRedisModel:
@@ -74,6 +73,13 @@ class Game(BaseRedisModel):
 
     def get_group(self):
         return Group(self.code)
+
+    def get_players(self):
+        slots = ("LEFT", "RIGHT", "TOP", "BOTTOM")
+        players = []
+        for i in range(len(self.users)):
+            players.append({"id": i + 1, "username": self.users[i], "border": slots[i]})
+        return players
 
     def _set_screen_size(self, width, height):
         min_dimension = min(int(width), int(height))

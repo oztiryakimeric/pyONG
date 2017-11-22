@@ -20,6 +20,7 @@ custom_routing = [
     # onto this channel) - routed on the "command" attribute of the decoded
     # message.
     route("websocket.receive", join, command="^join"),
+    # route("websocket.receive", ball_update, command="^ball_update"),
 ]
 
 channel_routing = [

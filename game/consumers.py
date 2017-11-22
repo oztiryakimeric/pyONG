@@ -31,25 +31,34 @@ def ws_disconnect(message, room_code):
     print("Client ({}) disconnected. Removing from game object...".format(message.user))
     game = Game.get_or_create(room_code)
     game.remove_client(message)
+    game.save()
+    game.send_all_clients({"action": "PLAYER_DISCONNECTED",
+                           "players": game.users,
+                           "disconnected_player": message.user.username})
 
 
 @channel_session_user
 def join(message):
     print("Client ({}) joined game".format(message.user))
+
     game = Game.get_or_create(message["room_code"])
     game.add_client(message)
     game.save()
 
-    if len(game.users) is not 2:
-        game.send_all_clients({"state": "WAITING", "players": game.users})
-    else:
-        game.send_all_clients({"state": "STARTING", "players": game.users, "ball_vector": "(2,3)"})
+    message.reply_channel.send({"text": json.dumps({"action": "CONSTANTS",
+                                                    "id": len(game.users),
+                                                    "player_count": 2,
+                                                    "ball_size": 15,
+                                                    "paddle_height": 75,
+                                                    "paddle_width": 15,
+                                                    "paddle_space": 10})})
 
+    game.send_all_clients({"action": "NEW_PLAYER",
+                           "players": game.get_players()})
 
-def paddle_update(message):
-    pass
-
-
-def score(message):
-    pass
+    if len(game.users) == 2:
+        game.send_all_clients({"action": "ALL_USERS_OK",
+                               "players": game.users,
+                               "screen_size": game.screen_size,
+                               "ball_vector": {"x": 2, "y": 3}})
 
