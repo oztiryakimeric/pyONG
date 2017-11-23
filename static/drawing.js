@@ -1,7 +1,6 @@
 let game = new Game();
-let keyboard = new Keyboard(game);
 let socket;
-
+let start = false;
 function setup(){
   //ws://localhost:8000/room/ABC
   var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
@@ -49,15 +48,24 @@ function setup(){
       game.setScreen(data.screen_size)
       game.setVelocity(data.ball_vector.x, data.ball_vector.y)
       game.initializeDrawables()
-
+      start = true
       loop()
     }
-    else if(data.action == "CLIENT_PRESSED_KEY"){
-      console.log("Action: CLIENT_PRESSED_KEY - " + message.data);
 
+    else if(data.action == "CLIENT_PRESSED_KEY"){
+      if(data.id != game.id){
+        game.getPlayer(data.id).movement.keyPressed(parseInt(data.key))
+        console.log(game.getPlayer(data.id).movement);
+      }
     }
+
     else if(data.action == "CLIENT_RELEASED_KEY"){
-      console.log("Action: CLIENT_RELEASED_KEY - " + message.data);
+      if(data.id != game.id){
+        console.log("Competitor released key at position: " + data.last_position.y);
+        let player = game.getPlayer(data.id)
+        player.paddle.position = data.last_position
+        player.movement.keyReleased()
+      }
     }
   }
 
@@ -68,35 +76,37 @@ function setup(){
 
 function draw() {
   background(200);
-  if(game){
-    if(game.ball){
-      game.ball.move(game.velocity)
-      game.ball.draw()
-    }
+  if(start){
+    game.ball.move(game.velocity)
+    game.ball.draw()
 
     for(var i=0; i<game.players.length; i++){
-      if(game.players[i].paddle)
-        game.players[i].paddle.draw()
-    }
-
-    if(keyboard.isPressed){
-      game.player.paddle.move(new Vector(0, keyboard.getDirection() * 6));
+      let player = game.players[i]
+        if(player.movement.isPressed)
+            player.paddle.move(new Vector(0, player.movement.getDirection() * 6));
+        player.paddle.draw()
     }
   }
 }
 
 function keyPressed(){
-  keyboard.keyPressed(keyCode);
-  socket.send(JSON.stringify({command:"paddle_update",
-                              action:"pressed",
-                              id:game.id,
-                              direction:keyboard.getDirection()}))
+  if(keyCode == UP_ARROW || keyCode == DOWN_ARROW || keyCode == LEFT_ARROW || keyCode == RIGHT_ARROW){
+    let movement = game.player.movement;
+    movement.keyPressed(keyCode);
+    socket.send(JSON.stringify({command:"paddle_update",
+                                action:"pressed",
+                                id:game.id,
+                                key:keyCode}))
+  }
 }
 
 function keyReleased(){
-  keyboard.keyReleased();
-  socket.send(JSON.stringify({command:"paddle_update",
-                              action:"released",
-                              id:game.id,
-                              last_position:game.player.paddle.position}))
+  if(game.player.movement.keyCode){
+    console.log("You relased key at position: " + game.player.paddle.position.y);
+    game.player.movement.keyReleased();
+    socket.send(JSON.stringify({command:"paddle_update",
+                                action:"released",
+                                id:game.id,
+                                last_position:game.player.paddle.position}))
+  }
 }

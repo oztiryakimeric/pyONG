@@ -7,12 +7,17 @@ class Screen{
   }
 
   position(border) {
-    let paddlePositions = {"LEFT":  {x: this.leftLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
-                           "RIGHT":  {x: this.rightLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
-                           "TOP":  {x:  (this.rightLimit - this.leftLimit)/2 + this.leftLimit, y:this.topLimit},
-                           "BOTTOM":  {x:(this.rightLimit - this.leftLimit)/2 + this.leftLimit, y:this.bottomLimit},
-                           "CENTER": {x: (this.rightLimit - this.leftLimit)/2 + this.leftLimit, y: (this.bottomLimit - this.topLimit)/2 + this.topLimit}}
-    return paddlePositions[border]
+    let tmp = {"LEFT":  {x: this.leftLimit,
+                         y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
+               "RIGHT": {x: this.rightLimit,
+                         y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
+               "TOP":   {x:  (this.rightLimit - this.leftLimit)/2 + this.leftLimit,
+                         y:this.topLimit},
+               "BOTTOM":{x:(this.rightLimit - this.leftLimit)/2 + this.leftLimit,
+                         y:this.bottomLimit},
+               "CENTER": {x: (this.rightLimit - this.leftLimit)/2 + this.leftLimit,
+                          y: (this.bottomLimit - this.topLimit)/2 + this.topLimit}}
+    return tmp[border]
   }
 }
 
@@ -77,7 +82,8 @@ class Rigid{
   }
 
   translatedPosition() {
-    return {x:floor(this.position.x - this.size.width / 2), y:floor(this.position.y - this.size.height / 2)}
+    return {x:floor(this.position.x - this.size.width / 2),
+            y:floor(this.position.y - this.size.height / 2)}
   }
 }
 
@@ -91,7 +97,8 @@ class Ball extends Rigid{
   draw(){
     fill(this.color)
     noStroke()
-    ellipse(this.translatedPosition().x, this.translatedPosition().y, this.size.height)
+    ellipse(this.translatedPosition().x, this.translatedPosition().y,
+            this.size.height)
   }
 }
 
@@ -107,7 +114,8 @@ class Paddle extends Rigid{
       return new Paddle(id, position, size, screen, border, color);
     }
     else if(border == "TOP" || border == "BOTTOM"){
-      return new Paddle(id, position, {height: size.width, width: size.height}, screen, border, color);
+      return new Paddle(id, position, {height: size.width, width: size.height},
+                        screen, border, color);
     }
   }
 
@@ -119,7 +127,8 @@ class Paddle extends Rigid{
   draw(){
     fill(this.color)
     noStroke()
-    rect(this.translatedPosition().x, this.translatedPosition().y, this.size.width, this.size.height)
+    rect(this.translatedPosition().x, this.translatedPosition().y,
+         this.size.width, this.size.height)
   }
 }
 
@@ -131,7 +140,8 @@ class Vector{
   }
 
   transform(constraint) {
-    return {x:floor(this.x / this.length * constraint), y:floor(this.y / this.length * constraint)}
+    return {x:floor(this.x / this.length * constraint),
+            y:floor(this.y / this.length * constraint)}
   }
 }
 
@@ -140,19 +150,19 @@ class Player{
     this.id = id;
     this.username = username;
     this.border = border;
-    this.score = 0
+    this.movement = new Movement(this);
+    this.score = 0;
   }
 }
 
-class Keyboard{
-
-  constructor(game){
-    this.game = game;
+class Movement{
+  constructor(player){
+    this.player = player;
   }
 
-  keyPressed(keyCode){
+  keyPressed(code){
     this.isPressed = true;
-    this.keyCode = keyCode;
+    this.keyCode = code;
   }
 
   keyReleased(){
@@ -161,21 +171,18 @@ class Keyboard{
   }
 
   getDirection(){
-    let border = this.game.player.border;
+    let border = this.player.border;
     if(border == "LEFT" || border == "RIGHT"){
       if(this.keyCode == UP_ARROW)
         return -1
-      if(this.keyCode == DOWN_ARROW)
+      else if(this.keyCode == DOWN_ARROW)
         return 1
     }
     else if(border =="TOP" || border == "BOTTOM"){
       if(this.keyCode == LEFT_ARROW)
         return -1
-      if(this.keyCode == RIGHT_ARROW)
+      else if(this.keyCode == RIGHT_ARROW)
         return 1
-    }
-    else {
-      return 0
     }
   }
 }
