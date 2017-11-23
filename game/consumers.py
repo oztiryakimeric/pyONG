@@ -65,13 +65,17 @@ def join(message):
 
 @channel_session_user
 def paddle_update(message):
-    print("Client ({}) send paddle update".format(message.user))
-
     game = Game.get_or_create(message["room_code"])
-    game.send_all_clients({"action": "PADDLE_UPDATE",
-                           "id": message["id"],
-                           "x": message["x"],
-                           "y": message["y"]})
+    if message["action"] == "pressed":
+        print("Client ({}) pressed key".format(message.user))
+        game.send_all_clients({"action": "CLIENT_PRESSED_KEY",
+                               "id": message["id"],
+                               "direction": message["direction"]})
 
-
+    elif message["action"] == "released":
+        print("Client ({}) released key".format(message.user))
+        print(str(message))
+        game.send_all_clients({"action": "CLIENT_RELEASED_KEY",
+                               "id": message["id"],
+                               "last_position": message["last_position"]})
 

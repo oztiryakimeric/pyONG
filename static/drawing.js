@@ -52,13 +52,12 @@ function setup(){
 
       loop()
     }
-    else if(data.action == "PADDLE_UPDATE"){
-      console.log("Action: PADDLE_UPDATE - " + message.data);
-      if(data.id != game.id){
-        let paddle = game.getPlayer(data.id).paddle
-        paddle.position.x = data.x;
-        paddle.position.y = data.y;
-      }
+    else if(data.action == "CLIENT_PRESSED_KEY"){
+      console.log("Action: CLIENT_PRESSED_KEY - " + message.data);
+
+    }
+    else if(data.action == "CLIENT_RELEASED_KEY"){
+      console.log("Action: CLIENT_RELEASED_KEY - " + message.data);
     }
   }
 
@@ -79,17 +78,25 @@ function draw() {
       if(game.players[i].paddle)
         game.players[i].paddle.draw()
     }
+
     if(keyboard.isPressed){
       game.player.paddle.move(new Vector(0, keyboard.getDirection() * 6));
-      socket.send(JSON.stringify({command:"paddle_update", id:game.id, x:game.player.paddle.position.x, y:game.player.paddle.position.y}))
     }
   }
 }
 
 function keyPressed(){
   keyboard.keyPressed(keyCode);
+  socket.send(JSON.stringify({command:"paddle_update",
+                              action:"pressed",
+                              id:game.id,
+                              direction:keyboard.getDirection()}))
 }
 
 function keyReleased(){
   keyboard.keyReleased();
+  socket.send(JSON.stringify({command:"paddle_update",
+                              action:"released",
+                              id:game.id,
+                              last_position:game.player.paddle.position}))
 }

@@ -13,7 +13,6 @@ class Game{
   setScreen(screenSize){
     this.screen = new Screen(this.paddleSpace, screenSize - this.paddleSpace,
                              this.paddleSpace, screenSize - this.paddleSpace);
-    console.log(this.screen);
   }
 
   setVelocity(x, y){
