@@ -23,7 +23,7 @@ class Game{
     for(var i=0; i<playerList.length; i++){
       let player = playerList[i]
       if(!this._contains(player))
-        this.players.push(new Player(player.id, player.username, player.border))
+        this.players.push(new Player(player.id, player.username, player.border, player.color))
     }
   }
 
@@ -53,11 +53,9 @@ class Game{
                                         this.paddleSize,
                                         this.screen,
                                         player.border,
-                                        "#FFFFFF")
-      if(this.id == player.id){
-        player.paddle.color = "#FF0000"
+                                        player.color)
+      if(this.id == player.id)
         this.player = player
-      }
     }
   }
 }

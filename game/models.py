@@ -1,3 +1,5 @@
+import random
+
 from channels import Group
 from django.db import models
 
@@ -33,11 +35,11 @@ class Game(BaseRedisModel):
         self.users = []
 
     @staticmethod
-    def from_redis(json):
-        game = Game(json["code"])
-        for user in json["users"]:
-            game.users.append(user)
-        game.screen_size = json["screen"]
+    def from_redis(json_obj):
+        game = Game(json_obj["code"])
+        for user in json_obj["users"]:
+            game.users.append(User(user["id"], user["username"], user["border"], Color.from_json(user["color"])))
+        game.screen_size = json_obj["screen"]
         return game
 
     @staticmethod
@@ -50,36 +52,43 @@ class Game(BaseRedisModel):
             return Game(code)
 
     def save(self):
-        serialized = {"code": self.code, "users": self.users, "screen": self.screen_size}
+        serialized_users = [user.dict() for user in self.users]
+        serialized = {"code": self.code, "users": serialized_users, "screen": self.screen_size}
         self.redis.set(self.code, json.dumps(serialized))
         return self
 
-    def delete(self):
-        self.redis.delete(self.code)
+    def safe_delete(self):
+        if len(self.users) == 0:
+            self.redis.delete(self.code)
 
     def add_client(self, message):
-        self.users.append(message.user.username)
+        slots = ("LEFT", "RIGHT", "TOP", "BOTTOM")
+        # self.users.append(User(len(self.users) + 1, message.user.username, slots[len(self.users)], Color.from_string(message["color"])))
+        self.users.append(User(len(self.users) + 1, message.user.username, slots[len(self.users)],
+                               Color(random.randint(0, 250), random.randint(0, 250), random.randint(0, 250))))
         self._set_screen_size(width=message["width"], height=message["height"])
         self.get_group().add(message.reply_channel)
 
     def remove_client(self, message):
-        self.users.remove(message.user.username)
+        for user in self.users:
+            if user.username == message.user.username:
+                self.users.remove(user)
+                break
         self.get_group().discard(message.reply_channel)
-        if len(self.users) == 0:
-            self.delete()
+
+    def get_clients(self):
+        return [user.dict() for user in self.users]
+
+    def find_client(self, username):
+        for user in self.users:
+            if user.username == username:
+                return user
 
     def send_all_clients(self, message):
         self.get_group().send({"text": json.dumps(message)})
 
     def get_group(self):
         return Group(self.code)
-
-    def get_players(self):
-        slots = ("LEFT", "RIGHT", "TOP", "BOTTOM")
-        players = []
-        for i in range(len(self.users)):
-            players.append({"id": i + 1, "username": self.users[i], "border": slots[i]})
-        return players
 
     def _set_screen_size(self, width, height):
         min_dimension = min(int(width), int(height))
@@ -90,3 +99,31 @@ class Game(BaseRedisModel):
         return self.code + " " + " with users " + str(self.users)
 
 
+class User:
+    def __init__(self, id, username, border, color):
+        self.id = id
+        self.username = username
+        self.border = border
+        self.color = color
+        self.score = 0
+
+    def dict(self):
+        return {"id": self.id, "username": self.username, "border": self.border, "color": self.color.dict()}
+
+
+class Color:
+    @staticmethod
+    def from_string(data):
+        return Color(data.split(",")[0], data.split(",")[1], data.split(",")[2])
+
+    @staticmethod
+    def from_json(json_obj):
+        return Color(json_obj["r"], json_obj["g"], json_obj["b"])
+
+    def __init__(self, r, g, b):
+        self.r = r
+        self.g = g
+        self.b = b
+
+    def dict(self):
+        return {"r": self.r, "g": self.g, "b": self.b}

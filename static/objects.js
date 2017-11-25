@@ -19,6 +19,13 @@ class Screen{
                           y: (this.bottomLimit - this.topLimit)/2 + this.topLimit}}
     return tmp[border]
   }
+
+  drawBorders(col){
+    //fill(col, 50)
+    //stroke(240,240,240)
+    //rect(this.leftLimit, this.topLimit,
+    //     this.rightLimit - this.leftLimit, this.bottomLimit - this.topLimit);
+  }
 }
 
 class Rigid{
@@ -97,7 +104,7 @@ class Ball extends Rigid{
   draw(){
     fill(this.color)
     noStroke()
-    ellipse(this.translatedPosition().x, this.translatedPosition().y,
+    ellipse(this.position.x, this.position.y,
             this.size.height)
   }
 }
@@ -120,12 +127,26 @@ class Paddle extends Rigid{
   }
 
   move(velocity){
-    this.position.x += velocity.x
-    this.position.y += velocity.y
+    if(velocity.y == 0){
+      if(this.position.x + velocity.x >= this.screen.rightLimit)
+        this.position.x = this.screen.rightLimit;
+      else if(this.position.x + velocity.x <= this.screen.leftLimit)
+        this.position.x = this.screen.leftLimit;
+      else
+        this.position.x += velocity.x
+    }
+    else if(velocity.x == 0){
+      if(this.position.y - this.size.height/2 + velocity.y <= this.screen.topLimit)
+        this.position.y = this.screen.topLimit + this.size.height/2
+      else if(this.position.y + this.size.height/2 + velocity.y >= this.screen.bottomLimit)
+        this.position.y = this.screen.bottomLimit - this.size.height/2
+      else
+        this.position.y += velocity.y
+    }
   }
 
   draw(){
-    fill(this.color)
+    fill(this.color.r, this.color.g, this.color.b)
     noStroke()
     rect(this.translatedPosition().x, this.translatedPosition().y,
          this.size.width, this.size.height)
@@ -146,10 +167,11 @@ class Vector{
 }
 
 class Player{
-  constructor(id, username, border){
+  constructor(id, username, border, color){
     this.id = id;
     this.username = username;
     this.border = border;
+    this.color = color;
     this.movement = new Movement(this);
     this.score = 0;
   }

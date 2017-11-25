@@ -18,7 +18,7 @@ function setup(){
     let height = window.innerHeight
                  || document.documentElement.clientHeight
                  || document.body.clientHeight
-    socket.send(JSON.stringify({command:"join", width: width, height: height}))
+    socket.send(JSON.stringify({command:"join", width: width, height: height, color: "150,150,150"}))
   };
 
   socket.onclose = function () {
@@ -31,7 +31,7 @@ function setup(){
     if(data.action == "CONSTANTS"){
       console.log("Action: CONSTANTS - " + message.data);
 
-      game.setConstants(data.id, data.ball_size, data.paddle_height,
+      game.setConstants(data.id, 60, data.paddle_height,
                         data.paddle_width, data.paddle_space);
     }
 
@@ -61,7 +61,6 @@ function setup(){
 
     else if(data.action == "CLIENT_RELEASED_KEY"){
       if(data.id != game.id){
-        console.log("Competitor released key at position: " + data.last_position.y);
         let player = game.getPlayer(data.id)
         player.paddle.position = data.last_position
         player.movement.keyReleased()
@@ -77,6 +76,7 @@ function setup(){
 function draw() {
   background(200);
   if(start){
+    game.screen.drawBorders(game.player.paddle.color)
     game.ball.move(game.velocity)
     game.ball.draw()
 
@@ -102,7 +102,6 @@ function keyPressed(){
 
 function keyReleased(){
   if(game.player.movement.keyCode){
-    console.log("You relased key at position: " + game.player.paddle.position.y);
     game.player.movement.keyReleased();
     socket.send(JSON.stringify({command:"paddle_update",
                                 action:"released",

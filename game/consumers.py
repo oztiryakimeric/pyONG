@@ -30,11 +30,12 @@ def ws_receive(message, room_code):
 def ws_disconnect(message, room_code):
     print("Client ({}) disconnected. Removing from game object...".format(message.user))
     game = Game.get_or_create(room_code)
+    game.send_all_clients({"action": "PLAYER_DISCONNECTED",
+                           "players": game.get_clients(),
+                           "disconnected_player": game.find_client(message.user.username).dict()})
     game.remove_client(message)
     game.save()
-    game.send_all_clients({"action": "PLAYER_DISCONNECTED",
-                           "players": game.users,
-                           "disconnected_player": message.user.username})
+    game.safe_delete()
 
 
 @channel_session_user
@@ -54,11 +55,11 @@ def join(message):
                                                     "paddle_space": 23})})
 
     game.send_all_clients({"action": "NEW_PLAYER",
-                           "players": game.get_players()})
+                           "players": game.get_clients()})
 
     if len(game.users) == 2:
         game.send_all_clients({"action": "ALL_USERS_OK",
-                               "players": game.users,
+                               "players": game.get_clients(),
                                "screen_size": game.screen_size,
                                "ball_vector": {"x": 2, "y": 3}})
 
@@ -67,13 +68,11 @@ def join(message):
 def paddle_update(message):
     game = Game.get_or_create(message["room_code"])
     if message["action"] == "pressed":
-        print("Client ({}) pressed key".format(message.user))
         game.send_all_clients({"action": "CLIENT_PRESSED_KEY",
                                "id": message["id"],
                                "key": message["key"]})
 
     elif message["action"] == "released":
-        print("Client ({}) released key".format(message.user))
         game.send_all_clients({"action": "CLIENT_RELEASED_KEY",
                                "id": message["id"],
                                "last_position": message["last_position"]})
