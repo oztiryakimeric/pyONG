@@ -6,25 +6,25 @@ class Screen{
     this.bottomLimit = bottomLimit
   }
 
-  position(border) {
-    let tmp = {"LEFT":  {x: this.leftLimit,
+  position(border, space) {
+    let tmp = {"LEFT":  {x: this.leftLimit + space,
                          y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
-               "RIGHT": {x: this.rightLimit,
+               "RIGHT": {x: this.rightLimit - space,
                          y: (this.bottomLimit - this.topLimit)/2 + this.topLimit},
                "TOP":   {x:  (this.rightLimit - this.leftLimit)/2 + this.leftLimit,
-                         y:this.topLimit},
+                         y:this.topLimit + space},
                "BOTTOM":{x:(this.rightLimit - this.leftLimit)/2 + this.leftLimit,
-                         y:this.bottomLimit},
+                         y:this.bottomLimit - space},
                "CENTER": {x: (this.rightLimit - this.leftLimit)/2 + this.leftLimit,
                           y: (this.bottomLimit - this.topLimit)/2 + this.topLimit}}
     return tmp[border]
   }
 
   drawBorders(col){
-    //fill(col, 50)
-    //stroke(240,240,240)
-    //rect(this.leftLimit, this.topLimit,
-    //     this.rightLimit - this.leftLimit, this.bottomLimit - this.topLimit);
+    fill(10, 200, 100)
+    stroke(240,240,240)
+    rect(this.leftLimit, this.topLimit,
+         this.rightLimit - this.leftLimit, this.bottomLimit - this.topLimit);
   }
 }
 
@@ -35,62 +35,25 @@ class Rigid{
     this.position = position
   }
 
-  isCollidesTop() {
-    if(this.position.y - this.size.height/2 <= this.screen.topLimit){
-      this.position.y = this.screen.topLimit + this.size.height/2;
-      return true
-    }
-    return false
-  }
-
-  isCollidesBottom() {
-    if(this.position.y + this.size.height/2 >= this.screen.bottomLimit){
-      this.position.y = this.screen.bottomLimit - this.size.height/2
-      return true
-    }
-    return false
-  }
-
-  isCollidesLeft() {
-    if(this.position.x - this.size.width/2 <= this.screen.leftLimit){
-      this.position.x = this.screen.leftLimit + this.size.width/2
-      return true
-    }
-    return false
-  }
-
-  isCollidesRight() {
-    if(this.position.x + this.size.width/2  >= this.screen.rightLimit){
-      this.position.x = this.screen.rightLimit - this.size.width/2
-      return true
-    }
-    return false
-  }
-
-  move(velocity){
-    if(this.isCollidesTop() || this.isCollidesBottom()){
-      this.changeVectorDirection("HORIZONTAL", velocity)
-    }
-    else if(this.isCollidesLeft() || this.isCollidesRight()){
-      this.changeVectorDirection("VERTICAL", velocity)
-
-    }
-    let transformedVelocity = velocity.transform(7)
-
-    this.position.x += transformedVelocity.x
-    this.position.y += transformedVelocity.y
-  }
-
-  changeVectorDirection(collisionType, vector){
-    if(collisionType == "VERTICAL")
-      vector.x = -vector.x
-    else if(collisionType == "HORIZONTAL")
-      vector.y = -vector.y
-  }
-
   translatedPosition() {
     return {x:floor(this.position.x - this.size.width / 2),
             y:floor(this.position.y - this.size.height / 2)}
+  }
+
+  getRightLimit(){
+    return this.position.x + this.size.width/2
+  }
+
+  getLeftLimit(){
+    return this.position.x - this.size.width/2
+  }
+
+  getTopLimit(){
+    return this.position.y - this.size.height/2
+  }
+
+  getBottomLimit(){
+    return this.position.y + this.size.height/2
   }
 }
 
@@ -99,6 +62,66 @@ class Ball extends Rigid{
     super(position, size, screen,)
     this.id = id
     this.color = color
+  }
+
+  willCollideBorder(velocity){
+    if(this.position.x + this.size.width/2 + velocity.x >= this.screen.rightLimit){
+      return "RIGHT"
+    }
+    else if(this.position.x - this.size.width/2 + velocity.x <= this.screen.leftLimit){
+      return "LEFT"
+    }
+    else false
+    if(this.position.y - this.size.height/2 + velocity.y <= this.screen.topLimit){
+      return "TOP"
+    }
+    else if(this.position.y + this.size.height/2 + velocity.y >= this.screen.bottomLimit){
+      return "BOTTOM"
+    }
+    else false
+  }
+
+  isCollidesPaddles(paddles){
+    for(var i=0; i<paddles.length; i++){
+      console.log(this._distance(paddles[i]));
+      if(this._distance(paddles[i]) < 100){
+        console.log("PADDLE COLLISION CONTROL");
+        let paddleCollision = this._isCollidesPaddle(paddles[i])
+        if(paddleCollision) return paddleCollision
+      }
+    }
+    return false;
+  }
+
+  _isCollidesPaddle(paddle){
+    let positions = [{x:this.getLeftLimit(), y:this.getTopLimit()}, {x:this.getRightLimit(), y:this.getTopLimit()},
+                     {x:this.getLeftLimit(), y:this.getBottomLimit()}, {x:this.getRightLimit(), y:this.getBottomLimit()}]
+
+    for(var i=0; i<positions.length; i++)
+      if(this._isPosInsideOf(positions[i], paddle))
+        return paddle.border;
+    return false;
+  }
+
+  _isPosInsideOf(position, rigid){
+    return position.x <= rigid.getRightLimit() && position.x >= rigid.getLeftLimit() && position.y <= rigid.getBottomLimit() && position.y >= rigid.getTopLimit()
+  }
+
+  _distance(rigid){
+    return Math.sqrt(Math.pow(this.position.x - rigid.position.x, 2) + Math.pow(this.position.y - rigid.position.y, 2))
+  }
+
+  getCollisionVector(border){
+    let vertical = new Vector(-1, 1)
+    let horizontal = new Vector(1, -1)
+    let tmp = {"RIGHT": vertical, "LEFT": vertical, "TOP": horizontal, "BOTTOM": horizontal}
+    return tmp[border]
+  }
+
+  move(velocity){
+    let transformed = velocity.transform(7)
+    this.position.x += transformed.x
+    this.position.y += transformed.y
   }
 
   draw(){
@@ -113,6 +136,7 @@ class Paddle extends Rigid{
   constructor(id, position, size, screen, border, color){
     super(position, size, screen,)
     this.id = id
+    this.border = border
     this.color = color
   }
 
@@ -163,6 +187,11 @@ class Vector{
   transform(constraint) {
     return {x:floor(this.x / this.length * constraint),
             y:floor(this.y / this.length * constraint)}
+  }
+
+  product(vector){
+    this.x *= vector.x
+    this.y *= vector.y
   }
 }
 

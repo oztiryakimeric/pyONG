@@ -48,20 +48,20 @@ def join(message):
 
     message.reply_channel.send({"text": json.dumps({"action": "CONSTANTS",
                                                     "id": len(game.users),
+                                                    "velocity": {"x": 2, "y": 3},
                                                     "player_count": 2,
                                                     "ball_size": 15,
                                                     "paddle_height": 75,
                                                     "paddle_width": 15,
-                                                    "paddle_space": 23})})
+                                                    "paddle_space": 30})})
 
     game.send_all_clients({"action": "NEW_PLAYER",
                            "players": game.get_clients()})
 
-    if len(game.users) == 2:
+    if len(game.users) == 1:
         game.send_all_clients({"action": "ALL_USERS_OK",
                                "players": game.get_clients(),
-                               "screen_size": game.screen_size,
-                               "ball_vector": {"x": 2, "y": 3}})
+                               "screen_size": game.screen_size,})
 
 
 @channel_session_user
@@ -76,4 +76,22 @@ def paddle_update(message):
         game.send_all_clients({"action": "CLIENT_RELEASED_KEY",
                                "id": message["id"],
                                "last_position": message["last_position"]})
+
+
+@channel_session_user
+def border_collision(message):
+    print("Client {} send border collision message".format(message.user.username))
+    game = Game.get_or_create(message["room_code"])
+
+    velocity = message["velocity"]
+    border = message["border"]
+    if border == "LEFT" or border == "RIGHT":
+        velocity["x"] = -velocity["x"]
+    elif border == "TOP" or border == "BOTTOM":
+        velocity["y"] = -velocity["y"]
+
+    game.send_all_clients({"action": "BORDER_COLLISION",
+                           "position": message["position"],
+                           "velocity": velocity})
+
 

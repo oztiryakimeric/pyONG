@@ -2,7 +2,7 @@ from channels import include
 from channels import route
 
 # This function will display all messages received in the console
-from game.consumers import ws_connect, ws_receive, ws_disconnect, join, paddle_update
+from game.consumers import ws_connect, ws_receive, ws_disconnect, join, paddle_update, border_collision
 
 websocket_routing = [
     # Called when WebSockets connect
@@ -21,6 +21,7 @@ custom_routing = [
     # message.
     route("websocket.receive", join, command="^join"),
     route("websocket.receive", paddle_update, command="^paddle_update"),
+    route("websocket.receive", border_collision, command="^border_collision"),
 ]
 
 channel_routing = [

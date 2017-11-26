@@ -3,16 +3,17 @@ class Game{
     this.players = [];
   }
 
-  setConstants(id, ballSize, paddleHeight, paddleWidth, paddleSpace){
+  setConstants(id, ballSize, paddleHeight, paddleWidth, paddleSpace, velocity){
     this.id = id;
     this.ballSize = ballSize;
     this.paddleSize = {height: paddleHeight, width: paddleWidth}
     this.paddleSpace = paddleSpace;
+    this.velocity = new Vector(velocity.x, velocity.y)
   }
 
   setScreen(screenSize){
-    this.screen = new Screen(this.paddleSpace, screenSize - this.paddleSpace,
-                             this.paddleSpace, screenSize - this.paddleSpace);
+    this.screen = new Screen(this.paddleSpace / 2, screenSize - this.paddleSpace / 2,
+                             this.paddleSpace / 2, screenSize - this.paddleSpace / 2);
   }
 
   setVelocity(x, y){
@@ -40,8 +41,15 @@ class Game{
         return this.players[i];
   }
 
+  getPaddleList(){
+    let tmp = []
+    for(var i=0; i < this.players.length; i++)
+      tmp.push(this.players[i].paddle)
+    return tmp
+  }
+
   initializeDrawables(){
-    this.ball = new Ball(1, this.screen.position("CENTER"),
+    this.ball = new Ball(1, this.screen.position("CENTER", 0),
                     {height:this.ballSize, width:this.ballSize},
                     this.screen,
                     "#FFFFFF");
@@ -49,7 +57,7 @@ class Game{
     for(var i=0; i<this.players.length; i++){
       let player = this.players[i]
       player.paddle = Paddle.newInstance(player.id,
-                                        this.screen.position(player.border),
+                                        this.screen.position(player.border, this.paddleSpace),
                                         this.paddleSize,
                                         this.screen,
                                         player.border,

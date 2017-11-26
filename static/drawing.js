@@ -1,6 +1,7 @@
 let game = new Game();
 let socket;
 let start = false;
+let collision_message_send = false;
 function setup(){
   //ws://localhost:8000/room/ABC
   var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
@@ -32,7 +33,7 @@ function setup(){
       console.log("Action: CONSTANTS - " + message.data);
 
       game.setConstants(data.id, 60, data.paddle_height,
-                        data.paddle_width, data.paddle_space);
+                        data.paddle_width, data.paddle_space, data.velocity);
     }
 
     else if(data.action == "NEW_PLAYER"){
@@ -46,7 +47,6 @@ function setup(){
 
       createCanvas(data.screen_size, data.screen_size)
       game.setScreen(data.screen_size)
-      game.setVelocity(data.ball_vector.x, data.ball_vector.y)
       game.initializeDrawables()
       start = true
       loop()
@@ -66,6 +66,13 @@ function setup(){
         player.movement.keyReleased()
       }
     }
+
+    else if(data.action == "BORDER_COLLISION"){
+      console.log("Action : BORDER_COLLISION " + message.data);
+      game.ball.position = data.position
+      game.velocity = new Vector(data.velocity.x, data.velocity.y)
+      collision_message_send = false;
+    }
   }
 
   background(200);
@@ -77,8 +84,8 @@ function draw() {
   background(200);
   if(start){
     game.screen.drawBorders(game.player.paddle.color)
-    game.ball.move(game.velocity)
-    game.ball.draw()
+
+    drawBall(game.ball)
 
     for(var i=0; i<game.players.length; i++){
       let player = game.players[i]
@@ -86,6 +93,28 @@ function draw() {
             player.paddle.move(new Vector(0, player.movement.getDirection() * 6));
         player.paddle.draw()
     }
+  }
+}
+
+function drawBall(ball){
+  let borderCollision = ball.willCollideBorder(game.velocity)
+  let paddleCollision = ball.isCollidesPaddles(game.getPaddleList())
+
+  if(borderCollision){
+    let collisionVector = ball.getCollisionVector(borderCollision);
+    game.velocity.product(collisionVector)
+    game.ball.move(game.velocity)
+    ball.draw()
+  }
+  else if(paddleCollision){
+    let collisionVector = ball.getCollisionVector(paddleCollision);
+    game.velocity.product(collisionVector)
+    game.ball.move(game.velocity)
+    ball.draw()
+  }
+  else{
+    game.ball.move(game.velocity)
+    game.ball.draw()
   }
 }
 
