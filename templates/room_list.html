@@ -1,12 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Room List</title>
-</head>
-<body>
+
+{% extends "base.html" %}
+
+{% block title %}pyONG{% endblock %}
+{% block header_text %}pyONG{% endblock %}
+
+{% block content %}
+
+<style>
+#rooms {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#rooms td, #rooms th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#rooms tr:nth-child(even){background-color: #f2f2f2;}
+
+#rooms tr:hover {background-color: #ddd;}
+
+#rooms th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #7b95d1;
+    color: white;
+}
+</style>
+
+
+<div style="width:800px; margin:0 auto;">
+    <a href="/create_room">Create New Room</a>
+    <table border=1 id="rooms" style="width:800px; margin:0 auto;">
+        <tr>
+            <th>Code</th>
+            <th>Room Name</th>
+            <th>Size</th>
+            <th>Owner</th>
+            <th>Date</th>
+        </tr>
     {% for room in rooms %}
-  <p><a href="/room/{{room}}">{{ room }}</a></p>
-{% endfor %}
-</body>
-</html>
+        <tr class="clickable" data-href="/room/{{ room.code }}" >
+            <td>{{ room.code }}</td>
+            <td>{{ room.name }}</td>
+            <td>{{ room.player_count }}</td>
+            <td>{{ room.owner }}</td>
+            <td>{{ room.timestamp }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+</div>
+
+<script>
+    var elements = document.getElementsByClassName('clickable');
+    for (var i = 0; i < elements.length; i++) {
+        var element = elements[i];
+        element.addEventListener('click', function() {
+            var href = this.dataset.href;
+            if (href) {
+            window.location.assign(href);
+            }
+        })
+    }
+</script>
+
+{% endblock %}

@@ -48,17 +48,17 @@ def join(message):
 
     message.reply_channel.send({"text": json.dumps({"action": "CONSTANTS",
                                                     "id": len(game.users),
-                                                    "velocity": {"x": 2, "y": 3},
-                                                    "player_count": 2,
-                                                    "ball_size": 15,
-                                                    "paddle_height": 75,
+                                                    "velocity": game.ball_vector,
+                                                    "player_count": game.get_room().player_count,
+                                                    "ball_size": game.get_room().ball_size,
+                                                    "paddle_height": game.get_room().paddle_size,
                                                     "paddle_width": 15,
                                                     "paddle_space": 30})})
 
     game.send_all_clients({"action": "NEW_PLAYER",
                            "players": game.get_clients()})
 
-    if len(game.users) == 1:
+    if len(game.users) == game.get_room().player_count:
         game.send_all_clients({"action": "ALL_USERS_OK",
                                "players": game.get_clients(),
                                "screen_size": game.screen_size,})

@@ -1,6 +1,7 @@
 import random
 
 from channels import Group
+from django.contrib.auth.models import User
 from django.db import models
 
 import json
@@ -9,17 +10,16 @@ from pyONG import singleton_redis
 
 
 class GameRoom(models.Model):
+    name = models.CharField(max_length=144)
     code = models.CharField(max_length=10)
-    # owner = models.CharField(max_length=100)
-    # timestamp = models.CharField(max_length=100)
-    # player_count = models.IntegerField()
-    # ball_size = models.IntegerField()
-    # paddle_size = models.IntegerField()
+    owner = models.ForeignKey(User, related_name="builder")
+    player_count = models.IntegerField(default=2)
+    ball_size = models.IntegerField(default=20)
+    paddle_size = models.IntegerField(default=75)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):
         return self.code
-
-# Create a model for store game results.
 
 
 class BaseRedisModel:
@@ -33,12 +33,13 @@ class Game(BaseRedisModel):
         self.code = room_code
         self.screen_size = None
         self.users = []
+        self._prepare_random_vector()
 
     @staticmethod
     def from_redis(json_obj):
         game = Game(json_obj["code"])
         for user in json_obj["users"]:
-            game.users.append(User(user["id"], user["username"], user["border"], Color.from_json(user["color"])))
+            game.users.append(RedisUser(user["id"], user["username"], user["border"], RedisColor.from_json(user["color"])))
         game.screen_size = json_obj["screen"]
         return game
 
@@ -63,9 +64,8 @@ class Game(BaseRedisModel):
 
     def add_client(self, message):
         slots = ("LEFT", "RIGHT", "TOP", "BOTTOM")
-        # self.users.append(User(len(self.users) + 1, message.user.username, slots[len(self.users)], Color.from_string(message["color"])))
-        self.users.append(User(len(self.users) + 1, message.user.username, slots[len(self.users)],
-                               Color(random.randint(0, 250), random.randint(0, 250), random.randint(0, 250))))
+        self.users.append(RedisUser(len(self.users) + 1, message.user.username, slots[len(self.users)],
+                                    RedisColor(random.randint(0, 250), random.randint(0, 250), random.randint(0, 250))))
         self._set_screen_size(width=message["width"], height=message["height"])
         self.get_group().add(message.reply_channel)
 
@@ -90,16 +90,23 @@ class Game(BaseRedisModel):
     def get_group(self):
         return Group(self.code)
 
+    def get_room(self):
+        GameRoom.objects.get(code=self.code)
+
     def _set_screen_size(self, width, height):
         min_dimension = min(int(width), int(height))
         if not self.screen_size or self.screen_size > min_dimension:
             self.screen_size = min_dimension
 
+    def _prepare_random_vector(self):
+        possible = (-3, -2, -1, 1, 2, 3)
+        self.ball_vector = {"x": possible[random.randint(0, 6)], "y": possible[random.randint(0, 6)]}
+
     def __str__(self):
         return self.code + " " + " with users " + str(self.users)
 
 
-class User:
+class RedisUser:
     def __init__(self, id, username, border, color):
         self.id = id
         self.username = username
@@ -111,14 +118,14 @@ class User:
         return {"id": self.id, "username": self.username, "border": self.border, "color": self.color.dict()}
 
 
-class Color:
+class RedisColor:
     @staticmethod
     def from_string(data):
-        return Color(data.split(",")[0], data.split(",")[1], data.split(",")[2])
+        return RedisColor(data.split(",")[0], data.split(",")[1], data.split(",")[2])
 
     @staticmethod
     def from_json(json_obj):
-        return Color(json_obj["r"], json_obj["g"], json_obj["b"])
+        return RedisColor(json_obj["r"], json_obj["g"], json_obj["b"])
 
     def __init__(self, r, g, b):
         self.r = r
