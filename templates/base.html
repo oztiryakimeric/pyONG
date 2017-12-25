@@ -1,5 +1,4 @@
 {% load staticfiles %}
-<!DOCTYPE html>
 <html>
 <head>
     <title>{% block title %}{% endblock %}</title>
@@ -10,14 +9,20 @@
 <body>
     <header>
         <h1>{% block header_text %}{% endblock %}</h1>
+
+        <div>
         {% if user.is_authenticated %}
+            <p>{{ user.username }}</p>
             <a href="{% url 'logout' %}">Logout</a>
         {% endif %}
+        </div>
     </header>
+
     <section>
         {% block content %}
         {% endblock %}
     </section>
+
     {% block extra_body %}{% endblock %}
 </body>
 </html>

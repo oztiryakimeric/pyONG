@@ -1,10 +1,8 @@
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from .forms import GameRoomForm
-from .models import GameRoom
+from .models import GameRoom, Game
 
 
 @login_required
@@ -16,7 +14,8 @@ def list_rooms(request):
 @login_required()
 def room(request, room_code):
     room = GameRoom.objects.get(code=room_code)
-    return render(request, "room.html", {room: room})
+    game = Game.get_or_create(room_code)
+    return render(request, "room.html", {"room": room, "users": game.get_clients()})
 
 
 @login_required
@@ -28,9 +27,10 @@ def create_room(request):
             game_room = form.save(commit=False)
             game_room.owner = request.user
             game_room.save()
+        return redirect("room", room_code=game_room.code)
     else:
         form = GameRoomForm()
-    return render(request, "create_room.html", {"form":form})
+    return render(request, "create_room.html", {"form": form})
 
 
 @login_required

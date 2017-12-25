@@ -1,15 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create Room</title>
-</head>
-<body>
-    <h1>New post</h1>
-    <form method="POST" class="post-form">
+{% extends "base.html" %}
+{% block title %}pyONG{% endblock %}
+{% block header_text %}pyONG{% endblock %}
+
+{% block content %}
+
+    <form method="POST">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="save btn btn-default">Save</button>
+        <table>
+            {{ form.as_table }}
+        </table>
+        <button>Login</button>
     </form>
-</body>
-</html>
+{% endblock %}

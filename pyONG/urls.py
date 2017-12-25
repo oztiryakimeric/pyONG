@@ -24,7 +24,7 @@ urlpatterns = [
     url(r'^accounts/login/$', login, name='login'),  # The base django login view
     url(r'^accounts/logout/$', logout, name='logout'),  # The base django logout view
     url(r'^rooms', list_rooms),
-    url(r'^room/(?P<room_code>[a-zA-Z0-9_]+)', room),
+    url(r'^room/(?P<room_code>[a-zA-Z0-9_]+)', room, name="room"),
     url(r'^create_room', create_room),
     url(r'^game/(?P<room_code>[a-zA-Z0-9_]+)', game_canvas),
     url(r'^admin/', admin.site.urls),

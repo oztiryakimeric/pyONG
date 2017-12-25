@@ -7,10 +7,59 @@
 
 {% block content %}
 
-<div style="width:800px; margin:0 auto;">
-    <h1>{{ room.name }}</h1>
-    <h2>{{ room.code }}</h2>
-</div>
+<style>
+#room_name {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 18px;
+    background-color: #7b95d1;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top:1px;
+    padding-bottom:1px;
+    border: 1px solid #7b95d1
+}
 
+#player_list {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    background-color: #8ea4d7;
+    padding-left: 15px;
+    padding-right: 15px;
+    border: 1px solid #8ea4d7
+}
+
+.button {
+    background-color: #4CAF50;
+    width: 100%;
+    border: 1px solid #4CAF50;
+    color: white;
+    padding: 15px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+
+<div style="width:800px;  margin:0 auto;">
+    <div id="room_name">
+        <h1>{{ room.name }}</h1>
+    </div>
+    <div id="player_list">
+        <table style="width:800px; margin:0 auto;">
+        {% for user in users %}
+            <tr>
+                <td style="padding: 8px;">{{ user.username }}</td>
+                <td style="text-align: right">14 Point</td>
+            </tr>
+        {% endfor %}
+        </table>
+    </div>
+    <a href="/game/{{ room.code }}" class="button">Enter Game</a>
+</div>
 
 {% endblock %}

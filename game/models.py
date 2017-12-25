@@ -11,7 +11,7 @@ from pyONG import singleton_redis
 
 class GameRoom(models.Model):
     name = models.CharField(max_length=144)
-    code = models.CharField(max_length=10)
+    code = models.CharField(max_length=10, db_index=True)
     owner = models.ForeignKey(User, related_name="builder")
     player_count = models.IntegerField(default=2)
     ball_size = models.IntegerField(default=20)
@@ -32,6 +32,7 @@ class Game(BaseRedisModel):
         super(Game, self).__init__()
         self.code = room_code
         self.screen_size = None
+        self.owner = None
         self.users = []
         self._prepare_random_vector()
 
@@ -64,10 +65,13 @@ class Game(BaseRedisModel):
 
     def add_client(self, message):
         slots = ("LEFT", "RIGHT", "TOP", "BOTTOM")
-        self.users.append(RedisUser(len(self.users) + 1, message.user.username, slots[len(self.users)],
-                                    RedisColor(random.randint(0, 250), random.randint(0, 250), random.randint(0, 250))))
-        self._set_screen_size(width=message["width"], height=message["height"])
-        self.get_group().add(message.reply_channel)
+        if True:# self.find_client(message.user.username) is None:
+            self.users.append(RedisUser(len(self.users) + 1, message.user.username, slots[len(self.users)],
+                              RedisColor(random.randint(0, 250), random.randint(0, 250), random.randint(0, 250))))
+            self._set_screen_size(width=message["width"], height=message["height"])
+            self.get_group().add(message.reply_channel)
+        else:
+            print("User already in room. Doing nothing")
 
     def remove_client(self, message):
         for user in self.users:
@@ -91,7 +95,7 @@ class Game(BaseRedisModel):
         return Group(self.code)
 
     def get_room(self):
-        GameRoom.objects.get(code=self.code)
+        return GameRoom.objects.get(code=self.code)
 
     def _set_screen_size(self, width, height):
         min_dimension = min(int(width), int(height))
@@ -100,7 +104,7 @@ class Game(BaseRedisModel):
 
     def _prepare_random_vector(self):
         possible = (-3, -2, -1, 1, 2, 3)
-        self.ball_vector = {"x": possible[random.randint(0, 6)], "y": possible[random.randint(0, 6)]}
+        self.ball_vector = {"x": possible[random.randint(0, 5)], "y": possible[random.randint(0, 5)]}
 
     def __str__(self):
         return self.code + " " + " with users " + str(self.users)

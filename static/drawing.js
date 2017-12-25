@@ -32,7 +32,7 @@ function setup(){
     if(data.action == "CONSTANTS"){
       console.log("Action: CONSTANTS - " + message.data);
 
-      game.setConstants(data.id, 60, data.paddle_height,
+      game.setConstants(data.id, data.ball_size, data.paddle_height,
                         data.paddle_width, data.paddle_space, data.velocity);
     }
 

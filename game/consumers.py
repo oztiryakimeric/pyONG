@@ -48,7 +48,7 @@ def join(message):
 
     message.reply_channel.send({"text": json.dumps({"action": "CONSTANTS",
                                                     "id": len(game.users),
-                                                    "velocity": game.ball_vector,
+                                                    "velocity": {"x": 2, "y": 3},
                                                     "player_count": game.get_room().player_count,
                                                     "ball_size": game.get_room().ball_size,
                                                     "paddle_height": game.get_room().paddle_size,
